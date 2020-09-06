@@ -103,7 +103,8 @@ namespace MVCStore.Areas.Admin.Controllers
         [HttpPost]
         public string RenameCategory(string newCatName, int id)
         {
-            using (Db db = new Db()) {
+            using (Db db = new Db())
+            {
                 //check name for uniqie
                 if (db.Categories.Any(x => x.Name == newCatName))
                     return "titletaken";
@@ -137,7 +138,7 @@ namespace MVCStore.Areas.Admin.Controllers
         [HttpPost]
         public ActionResult AddProduct(ProductVM model, HttpPostedFileBase file)
         {
-            
+
             //Validation
             if ((!ModelState.IsValid))
             {
@@ -158,11 +159,12 @@ namespace MVCStore.Areas.Admin.Controllers
                     return View(model);
                 }
             }
-             //declare variable productId
+            //declare variable productId
             int id;
 
-           //init and save model DTO
-            using(Db db = new Db()){
+            //init and save model DTO
+            using (Db db = new Db())
+            {
                 ProductDTO product = new ProductDTO();
                 product.Name = model.Name;
                 product.Slug = model.Name.Replace(" ", "-").ToLower();
@@ -175,7 +177,7 @@ namespace MVCStore.Areas.Admin.Controllers
                 db.Products.Add(product);
                 db.SaveChanges();
                 id = product.Id;
-            
+
             }
             //send message through TempDAta
             TempData["SM"] = "You have added a product";
@@ -187,11 +189,11 @@ namespace MVCStore.Areas.Admin.Controllers
 
             var pathString2 = Path.Combine(originalDirectory.ToString(), "Products\\" + id.ToString());
 
-            var pathString3 = Path.Combine(originalDirectory.ToString(), "Products\\"+id.ToString() + "\\Thumbs");
+            var pathString3 = Path.Combine(originalDirectory.ToString(), "Products\\" + id.ToString() + "\\Thumbs");
 
-            var pathString4 = Path.Combine(originalDirectory.ToString(), "Products\\"+id.ToString() + "\\Gallery");
-           
-            var pathString5 = Path.Combine(originalDirectory.ToString(), "Products\\"+id.ToString() + "\\Gallery\\Thumbs");
+            var pathString4 = Path.Combine(originalDirectory.ToString(), "Products\\" + id.ToString() + "\\Gallery");
+
+            var pathString5 = Path.Combine(originalDirectory.ToString(), "Products\\" + id.ToString() + "\\Gallery\\Thumbs");
 
             //check if the directory exists(if not, than create)
             if (!Directory.Exists(pathString1))
@@ -254,7 +256,7 @@ namespace MVCStore.Areas.Admin.Controllers
                 img.Resize(200, 200);
                 img.Save(path2);
             }
-#endregion
+            #endregion
 
 
 
@@ -269,7 +271,7 @@ namespace MVCStore.Areas.Admin.Controllers
             //declare ProductVM List
             List<ProductVM> listOfProductsVM;
             //set page number
-            var pageNum = page?? 1;
+            var pageNum = page ?? 1;
             using (Db db = new Db())
             {
                 //init list and fill it
@@ -279,7 +281,7 @@ namespace MVCStore.Areas.Admin.Controllers
                     .ToList();
                 //fill category for sort
 
-                ViewBag.Categories = new SelectList(db.Categories.ToList(), "Id","Name");
+                ViewBag.Categories = new SelectList(db.Categories.ToList(), "Id", "Name");
 
                 //set choised category
                 ViewBag.SelectedCat = catId.ToString();
@@ -304,7 +306,7 @@ namespace MVCStore.Areas.Admin.Controllers
                 //get Product
                 ProductDTO dto = db.Products.Find(id);
                 //check availability of product
-                if(dto == null)
+                if (dto == null)
                 {
                     return Content("That product does not exist");
                 }
@@ -329,20 +331,21 @@ namespace MVCStore.Areas.Admin.Controllers
             int id = model.Id;
 
             //fill list with categories and pictures
-            using(Db db = new Db())
+            using (Db db = new Db())
             {
                 model.Categories = new SelectList(db.Categories, "Id", "Name");
             }
             model.GalleryImages = Directory
                 .EnumerateFiles(Server.MapPath("/Images/Uploads/Products/" + id + "/Gallery/Thumbs"))
-                .Select(fn => Path.GetFileName(fn));           
+                .Select(fn => Path.GetFileName(fn));
             //Validate moedel
             if (!ModelState.IsValid)
             {
                 return View(model);
             }
             //check product name to unique
-            using (Db db = new Db()) {
+            using (Db db = new Db())
+            {
                 if (db.Products.Where(x => x.Id != id).Any(x => x.Name == model.Name))
                 {
                     model.Categories = new SelectList(db.Categories.ToList(), "Id", "Name");
@@ -374,7 +377,7 @@ namespace MVCStore.Areas.Admin.Controllers
             #region ImageUpload
 
             //check file load
-            
+
             if (file != null && file.ContentLength > 0)
             {
 
@@ -438,6 +441,78 @@ namespace MVCStore.Areas.Admin.Controllers
             //forward user
             return RedirectToAction("EditProduct");
         }
+        // POST: Admin/Shop/DeleteProduct/id
+        public ActionResult DeleteProduct(int id)
+        {
+            //delete product from db
+            using (Db db = new Db())
+            {
+                ProductDTO dto = db.Products.Find(id);
+                db.Products.Remove(dto);
+                db.SaveChanges();
+            }
+            //delete directory
 
+            var originalDirectory = new DirectoryInfo(string.Format($"{Server.MapPath(@"\")}Images\\Uploads"));
+            var pathString = Path.Combine(originalDirectory.ToString(), "Products\\" + id.ToString());
+            if (Directory.Exists(pathString))
+            {
+                Directory.Delete(pathString, true);
+            }
+
+
+            //forward user
+            return RedirectToAction("Products");
+        }
+        //POST: Admin/Shop/SaveGalleryImage/id
+        [HttpPost]
+        public void SaveGalleryImage(int id)
+        {
+            //get all files
+            foreach (string fileName in Request.Files)
+            {
+                //init all files
+                HttpPostedFileBase file = Request.Files[fileName];
+                //check to null
+                if (file != null && file.ContentLength > 0)
+                {
+                    //declare path to directories
+                    var originalDirectory = new DirectoryInfo(string.Format($"{Server.MapPath(@"\")}Images\\Uploads"));
+                    string pathString1 = Path.Combine(originalDirectory.ToString(), "Products\\" + id.ToString() + "\\Gallery");
+                    string pathString2 = Path.Combine(originalDirectory.ToString(), "Products\\" + id.ToString() + "\\Gallery\\Thumbs");
+
+                    //declare directories
+                    var path1 = string.Format($"{pathString1}\\{file.FileName}");
+                    var path2 = string.Format($"{pathString2}\\{file.FileName}");
+
+                    //save original and resized images
+                    file.SaveAs(path1);
+
+                    WebImage img = new WebImage(file.InputStream);
+                    img.Resize(200, 200);
+                    img.Save(path2);
+                }
+            }
+        }
+        //POST: Admin/Shop/DeleteImage/id
+        [HttpPost]
+
+        public void DeleteImage(int id, string imageName)
+        {
+            string fullpath1 = Request.MapPath("~/Images/Uploads/Products/" + id.ToString() + "/Gallery/" + imageName);
+            string fullpath2 = Request.MapPath("~/Images/Uploads/Products/" + id.ToString() + "/Gallery/Thumbs/" + imageName);
+            if (System.IO.File.Exists(fullpath1))
+            {
+                System.IO.File.Delete(fullpath1);
+            }
+
+            if (System.IO.File.Exists(fullpath2))
+            {
+                System.IO.File.Delete(fullpath2);
+            }
+
+
+
+        }
     }
 }
