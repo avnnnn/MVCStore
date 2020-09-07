@@ -253,7 +253,7 @@ namespace MVCStore.Areas.Admin.Controllers
 
                 //create and save decreased copy
                 WebImage img = new WebImage(file.InputStream);
-                img.Resize(200, 200);
+                img.Resize(200, 200).Crop(1,1);;
                 img.Save(path2);
             }
             #endregion
@@ -432,7 +432,7 @@ namespace MVCStore.Areas.Admin.Controllers
 
                 //create and save decreased copy
                 WebImage img = new WebImage(file.InputStream);
-                img.Resize(200, 200);
+                img.Resize(200, 200).Crop(1,1);;
                 img.Save(path2);
             }
 
@@ -489,7 +489,7 @@ namespace MVCStore.Areas.Admin.Controllers
                     file.SaveAs(path1);
 
                     WebImage img = new WebImage(file.InputStream);
-                    img.Resize(200, 200);
+                    img.Resize(200, 200).Crop(1,1);;
                     img.Save(path2);
                 }
             }
