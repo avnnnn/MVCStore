@@ -1,13 +1,12 @@
 ﻿using MVCStore.Models.Data;
 using MVCStore.Models.ViewModels.Pages;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 
 namespace MVCStore.Areas.Admin.Controllers
 {
+    [Authorize(Roles ="Admin")]
     public class PagesController : Controller
     {
         // GET: Admin/Pages

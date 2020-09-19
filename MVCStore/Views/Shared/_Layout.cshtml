@@ -17,14 +17,56 @@
         <div class="collapse navbar-collapse" id="navbarText">
             <ul class="navbar-nav mr-auto">
                 @Html.Action("PagesMenuPartial", "Pages")
+
+
+                @if (Request.IsAuthenticated)
+                {
+                    <li>@Html.ActionLink("Logout", "Logout", "Account", null, new { @class = "navbar-text", style = "text_decoration:none" })</li>
+                }
+                else
+                {
+                    if (ViewBag.Title == "Login")
+                    {
+                        <li class="navbar-text">@Html.ActionLink("Login", "Login", "Account", null, new { @class = "active", style = "text_decoration:none" })</li>
+                    }
+                    else
+                    {
+                        <li>@Html.ActionLink("Login", "Login", "Account", null, new { @class = "navbar-text ", style = "text_decoration:none" })</li>
+                    }
+                }
+                @if (Request.IsAuthenticated && User.IsInRole("User"))
+                {
+                    if (ViewBag.Title == "User Profile")
+                    {
+
+                        <li class="active">@Html.Action("UserNavPartial", "Account", new { area = "" })</li>
+                    }
+                    else
+                    {
+                        <li>@Html.Action("UserNavPartial", "Account", new { area = "" })</li>
+
+                    }
+                }
             </ul>
-            <span class="navbar-text">
-                Navbar text with an inline element
-            </span>
+            @if (Request.IsAuthenticated && User.IsInRole("Admin"))
+            {
+                <span class="navbar-text">
+                    @Html.ActionLink("AdminArea", "Index", "Dashboard", new { area = "Admin" }, null)
+                </span>
+            }
+            else
+            {
+                if (ViewBag.Title != "Cart Details")
+                {
+                    <span class="navbar-text">
+                        @Html.Action("CartPartial", "Cart")
+                    </span>
+
+                }
+            }
         </div>
     </nav>
-
-    <div class="container body-content">
+    <div class="container body-content" style="margin-top:30px">
         <div class="row">
             <!--Menu-->
 
@@ -32,11 +74,10 @@
                 @Html.Action("CategoryMenuPartial", "Shop")
             </div>
             <!--Sidebar-->
-            @if (ViewBag.Sidebar)
+            @if (ViewBag.Sidebar != null && ViewBag.Sidebar)
             {
                 <div class="col">
                     @RenderBody()
-
                 </div>
                 <div class="col-sm-12 col-md-3">
                     @Html.Action("SidebarPartial", "Pages")
@@ -46,7 +87,6 @@
             {
                 <div class="col">
                     @RenderBody()
-
                 </div>
             }
         </div>
@@ -58,7 +98,6 @@
     </div>
 
     @Scripts.Render("~/bundles/jquery")
-    @Scripts.Render("~/bundles/scripts")
     @Scripts.Render("~/bundles/bootstrap")
     @RenderSection("scripts", required: false)
 </body>

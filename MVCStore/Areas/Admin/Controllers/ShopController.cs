@@ -1,7 +1,7 @@
-﻿using MVCStore.Models.Data;
+﻿using MVCStore.Areas.Admin.Models.ViewModels.Shop;
+using MVCStore.Models.Data;
 using MVCStore.Models.ViewModels.Shop;
 using PagedList;
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -11,6 +11,7 @@ using System.Web.Mvc;
 
 namespace MVCStore.Areas.Admin.Controllers
 {
+    [Authorize(Roles ="Admin")]
     public class ShopController : Controller
     {
         // GET: Admin/Shop
@@ -496,7 +497,6 @@ namespace MVCStore.Areas.Admin.Controllers
         }
         //POST: Admin/Shop/DeleteImage/id
         [HttpPost]
-
         public void DeleteImage(int id, string imageName)
         {
             string fullpath1 = Request.MapPath("~/Images/Uploads/Products/" + id.ToString() + "/Gallery/" + imageName);
@@ -510,9 +510,53 @@ namespace MVCStore.Areas.Admin.Controllers
             {
                 System.IO.File.Delete(fullpath2);
             }
+        }
+        //GET: Admin/Shop/Orders
+        public ActionResult Orders()
+        {
+            //init OrdersForAdminVM model
+            List<OrdersForAdminVM> ordersForAdmin = new List<OrdersForAdminVM>();
+            using (Db db = new Db())
+            {
+                //init OrderVM
+                List<OrderVM> orders = db.Orders.ToArray().Select(x => new OrderVM(x)).ToList();
+                //Get all models
+                foreach(var order in orders)
+                {
+                    //init dictionary
+                    Dictionary<string, int> productAndQty = new Dictionary<string, int>();
+                    //var for total cost
+                    decimal total = 0m;
+                    //init list OrderDetailsDTO
+                    List<OrderDetailsDTO> orderDetails = db.OrderDetails.Where(x => x.OrderId == order.OrderId).ToList();
+                    // get user
+                    UserDTO user = db.Users.FirstOrDefault(x => x.Id == order.UserId);
+                    //get list ofproducts from OrderDetailsDTO
+                    foreach (var orderDetail in orderDetails)
+                    {
+                        //get products
+                        ProductDTO product = db.Products.FirstOrDefault(x => x.Id == orderDetail.ProductId);
+                         //add to dictionary
+                        productAndQty.Add(product.Name, orderDetail.Quantity);
+                        //get total cost of products
+                        total += orderDetail.Quantity * product.Price;
+                    }
+                    //add data to OrdersForAdminVM
+                    ordersForAdmin.Add(new OrdersForAdminVM()
+                    {
+                        OrderNumber = order.OrderId,
+                        UserName = user.UserName,
+                        Total = total,
+                        ProductsAndQty = productAndQty,
+                        CreatedAt = order.CreatedAt
 
+                    });
+                   
+                }
 
-
+            }
+            //return OrdersForAdminVM model  in view
+            return View(ordersForAdmin);
         }
     }
 }

@@ -1,8 +1,4 @@
 ﻿using MVCStore.Models.Data;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Web;
 
 namespace MVCStore.Models.ViewModels.Shop
 {
